@@ -278,7 +278,7 @@
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-    /* 响应式 */
+    /* ========== 移动端优化 ========== */
     @media (max-width: 768px) {
       .custom-header-inner { padding: 10px 16px; }
       .custom-logo { font-size: 1rem; }
@@ -291,9 +291,73 @@
       .el-header > div { font-size: 1.2rem !important; }
       .el-main { padding: 0 12px 30px !important; }
       .el-card__body { padding: 14px 16px !important; font-size: 1rem; }
-      .el-table td { padding: 8px !important; }
-      .el-button--mini { padding: 5px 8px !important; font-size: 0.7rem !important; }
-      .el-image__inner.el-image__inner { height: 70px; }
+
+      /* 移动端表格卡片化 */
+      .el-table {
+        display: block !important;
+      }
+      .el-table__header-wrapper {
+        display: none !important;
+      }
+      .el-table__body-wrapper {
+        display: block !important;
+      }
+      .el-table__body {
+        display: block !important;
+      }
+      .el-table__body tbody {
+        display: block !important;
+      }
+      .el-table__body tr {
+        display: block !important;
+        margin-bottom: 12px !important;
+        background: var(--surface) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius) !important;
+        padding: 12px !important;
+        box-shadow: var(--shadow-sm) !important;
+      }
+      .el-table__body td {
+        display: block !important;
+        border: none !important;
+        padding: 6px 0 !important;
+        background: transparent !important;
+        text-align: left !important;
+      }
+      .el-table__body td::before {
+        content: attr(class);
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        display: block;
+        margin-bottom: 2px;
+      }
+      /* 隐藏空单元格 */
+      .el-table__body td.el-table__cell:empty {
+        display: none !important;
+      }
+      /* 操作按钮横排 */
+      .el-table__body td:last-child {
+        display: flex !important;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding-top: 10px !important;
+        border-top: 1px solid var(--border) !important;
+        margin-top: 6px;
+      }
+      .el-table__body td:last-child .el-button {
+        flex: 1;
+        min-width: 60px;
+        padding: 5px 8px !important;
+        font-size: 0.7rem !important;
+      }
+      /* 预览图全宽 */
+      .el-image__inner.el-image__inner {
+        height: 160px !important;
+      }
+      video[style*="height: 180px"] {
+        height: 160px !important;
+      }
     }
   </style>
 </head>
@@ -333,13 +397,49 @@
         </div>
       </el-header>
       <el-main>
+        <!-- 统计卡片 -->
         <el-row :gutter="12">
-          <el-col :span="24">
+          <el-col :xs="8" :sm="8" :md="8">
             <el-card shadow="always">
-              记录总数量: {{ Number }}
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:40px;height:40px;background:var(--primary-bg);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.1rem;">
+                  <i class="fas fa-database"></i>
+                </div>
+                <div>
+                  <div style="font-size:0.8rem;color:var(--text-secondary);font-weight:400;">记录总数量</div>
+                  <div style="font-size:1.3rem;font-weight:700;">{{ Number }}</div>
+                </div>
+              </div>
+            </el-card>
+          </el-col>
+          <el-col :xs="8" :sm="8" :md="8">
+            <el-card shadow="always">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:40px;height:40px;background:var(--primary-bg);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.1rem;">
+                  <i class="fas fa-image"></i>
+                </div>
+                <div>
+                  <div style="font-size:0.8rem;color:var(--text-secondary);font-weight:400;">图片文件</div>
+                  <div style="font-size:1.3rem;font-weight:700;">{{ imageCount }}</div>
+                </div>
+              </div>
+            </el-card>
+          </el-col>
+          <el-col :xs="8" :sm="8" :md="8">
+            <el-card shadow="always">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:40px;height:40px;background:var(--primary-bg);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.1rem;">
+                  <i class="fas fa-video"></i>
+                </div>
+                <div>
+                  <div style="font-size:0.8rem;color:var(--text-secondary);font-weight:400;">视频文件</div>
+                  <div style="font-size:1.3rem;font-weight:700;">{{ videoCount }}</div>
+                </div>
+              </div>
             </el-card>
           </el-col>
         </el-row>
+
         <template>
           <el-table :data="tableData.filter(data => !search || data.name.toLowerCase().includes(search.toLowerCase()))"
             style="width: 100%">
@@ -359,7 +459,7 @@
                 <el-popover trigger="hover" placement="top">
                   <p>{{ scope.row.metadata }}</p>
                   <div slot="reference" class="name-wrapper">
-                    <el-tag size="medium">{{ scope.row.metadata }}</el-tag>
+                    <el-tag size="medium" :type="getTagType(scope.row.metadata)">{{ getTagText(scope.row.metadata) }}</el-tag>
                   </div>
                 </el-popover>
               </template>
@@ -403,7 +503,27 @@
         password: '123456',
         searchTimer: null
       },
+      computed: {
+        imageCount() {
+          return this.tableData.filter(r => r.name && !r.name.endsWith('.mp4')).length;
+        },
+        videoCount() {
+          return this.tableData.filter(r => r.name && r.name.endsWith('.mp4')).length;
+        }
+      },
       methods: {
+        getTagType(meta) {
+          if (!meta) return 'info';
+          if (meta.includes('白名单')) return 'success';
+          if (meta.includes('黑名单')) return 'danger';
+          return 'info';
+        },
+        getTagText(meta) {
+          if (!meta) return '正常';
+          if (meta.includes('白名单')) return '白名单';
+          if (meta.includes('黑名单')) return '黑名单';
+          return '正常';
+        },
         handleBlock(index, key) {
           console.log(key);
           if (confirm("确认加入黑名单吗?")) {
@@ -512,7 +632,7 @@
           fetch(url, opts)
             .then(r => r.json())
             .then(result => {
-              this.tableData = this.tableData.concat(result.keys || []);
+              this.tableData = result.tableData.concat(result.keys || []);
               this.nextCursor = result.list_complete ? null : result.cursor;
               this.Number = this.tableData.length;
             })
