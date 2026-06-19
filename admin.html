@@ -188,6 +188,8 @@
     .el-card__body {
       padding: 20px 24px !important;
       color: var(--text) !important;
+      font-size: 1.1rem;
+      font-weight: 600;
     }
 
     /* 表格 */
@@ -276,7 +278,7 @@
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-    /* ========== 移动端优化 ========== */
+    /* 响应式 */
     @media (max-width: 768px) {
       .custom-header-inner { padding: 10px 16px; }
       .custom-logo { font-size: 1rem; }
@@ -288,7 +290,7 @@
       .el-container { padding-top: 52px; }
       .el-header > div { font-size: 1.2rem !important; }
       .el-main { padding: 0 12px 30px !important; }
-      .el-card__body { padding: 14px 16px !important; }
+      .el-card__body { padding: 14px 16px !important; font-size: 1rem; }
       .el-table td { padding: 8px !important; }
       .el-button--mini { padding: 5px 8px !important; font-size: 0.7rem !important; }
       .el-image__inner.el-image__inner { height: 70px; }
@@ -296,6 +298,7 @@
   </style>
 </head>
 <body>
+  <!-- 自定义固定顶栏 -->
   <div class="custom-header">
     <div class="custom-header-inner">
       <a href="/" class="custom-logo">
@@ -312,6 +315,7 @@
     </div>
   </div>
 
+  <!-- 原始 Element 结构完全保留 -->
   <div id="app">
     <el-container>
       <el-header>
@@ -330,47 +334,12 @@
       </el-header>
       <el-main>
         <el-row :gutter="12">
-          <el-col :xs="8" :sm="8" :md="8">
+          <el-col :span="24">
             <el-card shadow="always">
-              <div style="display:flex;align-items:center;gap:12px;">
-                <div style="width:40px;height:40px;background:var(--primary-bg);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.1rem;">
-                  <i class="fas fa-database"></i>
-                </div>
-                <div>
-                  <div style="font-size:0.8rem;color:var(--text-secondary);font-weight:400;">记录总数量</div>
-                  <div style="font-size:1.3rem;font-weight:700;">{{ Number }}</div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-          <el-col :xs="8" :sm="8" :md="8">
-            <el-card shadow="always">
-              <div style="display:flex;align-items:center;gap:12px;">
-                <div style="width:40px;height:40px;background:var(--primary-bg);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.1rem;">
-                  <i class="fas fa-image"></i>
-                </div>
-                <div>
-                  <div style="font-size:0.8rem;color:var(--text-secondary);font-weight:400;">图片文件</div>
-                  <div style="font-size:1.3rem;font-weight:700;">{{ imageCount }}</div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-          <el-col :xs="8" :sm="8" :md="8">
-            <el-card shadow="always">
-              <div style="display:flex;align-items:center;gap:12px;">
-                <div style="width:40px;height:40px;background:var(--primary-bg);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.1rem;">
-                  <i class="fas fa-video"></i>
-                </div>
-                <div>
-                  <div style="font-size:0.8rem;color:var(--text-secondary);font-weight:400;">视频文件</div>
-                  <div style="font-size:1.3rem;font-weight:700;">{{ videoCount }}</div>
-                </div>
-              </div>
+              记录总数量: {{ Number }}
             </el-card>
           </el-col>
         </el-row>
-
         <template>
           <el-table :data="tableData.filter(data => !search || data.name.toLowerCase().includes(search.toLowerCase()))"
             style="width: 100%">
@@ -390,7 +359,7 @@
                 <el-popover trigger="hover" placement="top">
                   <p>{{ scope.row.metadata }}</p>
                   <div slot="reference" class="name-wrapper">
-                    <el-tag size="medium" :type="getTagType(scope.row.metadata)">{{ getTagText(scope.row.metadata) }}</el-tag>
+                    <el-tag size="medium">{{ scope.row.metadata }}</el-tag>
                   </div>
                 </el-popover>
               </template>
@@ -434,27 +403,7 @@
         password: '123456',
         searchTimer: null
       },
-      computed: {
-        imageCount() {
-          return this.tableData.filter(r => r.name && !r.name.endsWith('.mp4')).length;
-        },
-        videoCount() {
-          return this.tableData.filter(r => r.name && r.name.endsWith('.mp4')).length;
-        }
-      },
       methods: {
-        getTagType(meta) {
-          if (!meta) return 'info';
-          if (meta.includes('白名单')) return 'success';
-          if (meta.includes('黑名单')) return 'danger';
-          return 'info';
-        },
-        getTagText(meta) {
-          if (!meta) return '正常';
-          if (meta.includes('白名单')) return '白名单';
-          if (meta.includes('黑名单')) return '黑名单';
-          return '正常';
-        },
         handleBlock(index, key) {
           console.log(key);
           if (confirm("确认加入黑名单吗?")) {
@@ -619,6 +568,7 @@
       }
     });
 
+    // 主题切换
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = themeToggle.querySelector('i');
     const savedTheme = localStorage.getItem('theme') || 'light';
