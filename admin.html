@@ -188,8 +188,6 @@
     .el-card__body {
       padding: 20px 24px !important;
       color: var(--text) !important;
-      font-size: 1.1rem;
-      font-weight: 600;
     }
 
     /* 表格 */
@@ -290,7 +288,7 @@
       .el-container { padding-top: 52px; }
       .el-header > div { font-size: 1.2rem !important; }
       .el-main { padding: 0 12px 30px !important; }
-      .el-card__body { padding: 14px 16px !important; font-size: 1rem; }
+      .el-card__body { padding: 14px 16px !important; }
 
       /* 移动端表格卡片化 */
       .el-table {
@@ -332,11 +330,9 @@
         display: block;
         margin-bottom: 2px;
       }
-      /* 隐藏空单元格 */
       .el-table__body td.el-table__cell:empty {
         display: none !important;
       }
-      /* 操作按钮横排 */
       .el-table__body td:last-child {
         display: flex !important;
         flex-wrap: wrap;
@@ -351,7 +347,6 @@
         padding: 5px 8px !important;
         font-size: 0.7rem !important;
       }
-      /* 预览图全宽 */
       .el-image__inner.el-image__inner {
         height: 160px !important;
       }
@@ -362,7 +357,6 @@
   </style>
 </head>
 <body>
-  <!-- 自定义固定顶栏 -->
   <div class="custom-header">
     <div class="custom-header-inner">
       <a href="/" class="custom-logo">
@@ -379,7 +373,6 @@
     </div>
   </div>
 
-  <!-- 原始 Element 结构完全保留 -->
   <div id="app">
     <el-container>
       <el-header>
@@ -397,7 +390,6 @@
         </div>
       </el-header>
       <el-main>
-        <!-- 统计卡片 -->
         <el-row :gutter="12">
           <el-col :xs="8" :sm="8" :md="8">
             <el-card shadow="always">
@@ -632,7 +624,7 @@
           fetch(url, opts)
             .then(r => r.json())
             .then(result => {
-              this.tableData = result.tableData.concat(result.keys || []);
+              this.tableData = this.tableData.concat(result.keys || []);
               this.nextCursor = result.list_complete ? null : result.cursor;
               this.Number = this.tableData.length;
             })
@@ -688,7 +680,6 @@
       }
     });
 
-    // 主题切换
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = themeToggle.querySelector('i');
     const savedTheme = localStorage.getItem('theme') || 'light';
