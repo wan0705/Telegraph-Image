@@ -1,358 +1,699 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <!-- import CSS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Telegraph-Image</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.15.3/lib/theme-chalk/index.css"
     integrity="sha256-ghr1zmXTODLKl1HULQd6fq1MIe7m3FJiNTOCT8sddLM=" crossorigin="anonymous">
   <style>
-    .el-image__inner.el-image__inner {
-      width: 100%;
-      height: 90px;
+    :root {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --primary-light: #d1fae5;
+      --primary-bg: #ecfdf5;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-hover: #f1f5f9;
+      --text: #1e293b;
+      --text-secondary: #64748b;
+      --text-muted: #94a3b8;
+      --border: #e2e8f0;
+      --border-light: #f1f5f9;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow: 0 4px 12px rgba(0,0,0,0.06);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,0.08);
+      --shadow-xl: 0 20px 50px rgba(0,0,0,0.1);
+      --radius: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .el-image {
-      text-align: center;
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-hover: #334155;
+      --text: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border: #334155;
+      --border-light: #1e293b;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow: 0 4px 12px rgba(0,0,0,0.3);
+      --shadow-lg: 0 10px 30px rgba(0,0,0,0.4);
+      --shadow-xl: 0 20px 50px rgba(0,0,0,0.5);
     }
 
-    .el-button+.el-button {
-      margin: 0;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: var(--transition);
+      line-height: 1.6;
     }
+
+    /* ========== 顶部导航栏 ========== */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
+    }
+    [data-theme="dark"] .header {
+      background: rgba(15,23,42,0.85);
+    }
+    .header-inner {
+      max-width: 1200px; margin: 0 auto;
+      padding: 14px 24px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1.25rem; font-weight: 700;
+      color: var(--text); text-decoration: none;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .logo:hover { color: var(--primary); }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 1rem;
+      box-shadow: 0 2px 8px rgba(16,185,129,0.3);
+      flex-shrink: 0;
+    }
+    .nav-links {
+      display: flex; gap: 8px; align-items: center;
+    }
+    .nav-link {
+      padding: 8px 16px; border-radius: 8px;
+      color: var(--text-secondary); text-decoration: none;
+      font-weight: 500; font-size: 0.9rem;
+      transition: var(--transition);
+      display: flex; align-items: center; gap: 6px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .nav-link:hover { color: var(--primary); background: var(--primary-bg); border-color: var(--primary-light); }
+    .nav-link.active {
+      background: var(--primary-bg); color: var(--primary); border-color: var(--primary-light);
+    }
+    .theme-toggle {
+      width: 38px; height: 38px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text-secondary); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: var(--transition); font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+    .theme-toggle:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-bg); }
+
+    /* ========== 主内容区 ========== */
+    .main-container {
+      max-width: 1200px; margin: 0 auto;
+      padding: 90px 24px 40px;
+    }
+
+    /* ========== 统计卡片 ========== */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px; margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 24px; border: 1px solid var(--border);
+      transition: var(--transition);
+      display: flex; align-items: center; gap: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-card:hover {
+      transform: translateY(-2px); box-shadow: var(--shadow);
+      border-color: var(--primary-light);
+    }
+    .stat-icon {
+      width: 48px; height: 48px;
+      background: var(--primary-bg); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--primary); font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .stat-info { flex: 1; min-width: 0; }
+    .stat-label { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 4px; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--text); }
+
+    /* ========== 内容卡片 ========== */
+    .content-card {
+      background: var(--surface); border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .content-card:hover { box-shadow: var(--shadow); }
+    .card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .card-title {
+      font-size: 1.1rem; font-weight: 600; color: var(--text);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title i { color: var(--primary); }
+
+    /* ========== 搜索框 ========== */
+    .search-box {
+      position: relative; width: 280px;
+    }
+    .search-box input {
+      width: 100%; padding: 10px 14px 10px 38px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      background: var(--bg); color: var(--text);
+      font-size: 0.9rem; outline: none;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    .search-box input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(16,185,129,0.1);
+    }
+    .search-box input::placeholder { color: var(--text-muted); }
+    .search-box i {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%); color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* ========== Element UI 表格美化 ========== */
+    .el-table {
+      background: transparent !important;
+    }
+    .el-table th {
+      background: var(--bg) !important;
+      color: var(--text-secondary) !important;
+      font-weight: 600 !important;
+      border-bottom: 1px solid var(--border) !important;
+      padding: 14px 16px !important;
+    }
+    .el-table td {
+      border-bottom: 1px solid var(--border) !important;
+      padding: 12px 16px !important;
+      background: var(--surface) !important;
+      color: var(--text) !important;
+    }
+    .el-table--enable-row-hover .el-table__body tr:hover > td {
+      background: var(--surface-hover) !important;
+    }
+    .el-table::before { display: none; }
+    .el-table__empty-block { background: var(--surface); }
+    .el-table__empty-text { color: var(--text-muted); }
+
+    /* 图片预览 */
+    .preview-img {
+      width: 100%; height: 100px; object-fit: cover;
+      border-radius: 8px; cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid var(--border);
+    }
+    .preview-img:hover { transform: scale(1.02); box-shadow: var(--shadow); }
+    .preview-video {
+      width: 100%; height: 100px; border-radius: 8px;
+      border: 1px solid var(--border); background: #000;
+    }
+
+    /* 标签 */
+    .el-tag {
+      border-radius: 6px !important; font-weight: 500 !important;
+      border: none !important;
+    }
+    .el-tag--medium { padding: 0 10px !important; height: 28px !important; line-height: 26px !important; }
+
+    /* 按钮 */
+    .el-button {
+      border-radius: 8px !important; font-weight: 500 !important;
+      transition: var(--transition) !important;
+    }
+    .el-button--primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+      border: none !important;
+      box-shadow: 0 2px 8px rgba(16,185,129,0.3) !important;
+    }
+    .el-button--primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(16,185,129,0.4) !important;
+    }
+    .el-button--info {
+      background: var(--surface-hover) !important; color: var(--text-secondary) !important;
+      border: 1px solid var(--border) !important;
+    }
+    .el-button--info:hover {
+      border-color: var(--primary) !important; color: var(--primary) !important;
+      background: var(--primary-bg) !important;
+    }
+    .el-button--danger {
+      background: #fef2f2 !important; color: #ef4444 !important;
+      border: 1px solid #fecaca !important;
+    }
+    .el-button--danger:hover {
+      background: #ef4444 !important; color: white !important;
+      border-color: #ef4444 !important;
+    }
+    .el-button--warning {
+      background: #fffbeb !important; color: #f59e0b !important;
+      border: 1px solid #fde68a !important;
+    }
+    .el-button--warning:hover {
+      background: #f59e0b !important; color: white !important;
+      border-color: #f59e0b !important;
+    }
+    .el-button--mini { padding: 7px 12px !important; }
+
+    /* 分页/加载更多 */
+    .load-more-wrap {
+      padding: 20px; text-align: center;
+      background: var(--surface);
+    }
+    .load-more-btn {
+      padding: 10px 32px; border-radius: 10px;
+      border: 1.5px solid var(--border); background: var(--bg);
+      color: var(--text); font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .load-more-btn:hover {
+      border-color: var(--primary); color: var(--primary);
+      background: var(--primary-bg);
+    }
+
+    /* ========== Toast 覆盖 ========== */
+    .el-message {
+      border-radius: 12px !important;
+      box-shadow: var(--shadow-xl) !important;
+      border: 1px solid var(--border) !important;
+    }
+    .el-message--success {
+      background: var(--surface) !important; border-left: 4px solid var(--primary) !important;
+    }
+    .el-message--error {
+      background: var(--surface) !important; border-left: 4px solid #ef4444 !important;
+    }
+
+    /* ========== 响应式 ========== */
+    @media (max-width: 768px) {
+      .header-inner { padding: 10px 16px; }
+      .logo { font-size: 1rem; gap: 8px; }
+      .logo-icon { width: 32px; height: 32px; font-size: 0.9rem; }
+      .nav-link {
+        padding: 6px 10px; font-size: 0.8rem; gap: 4px;
+      }
+      .nav-link span { display: none; }
+      .theme-toggle { width: 34px; height: 34px; }
+      .main-container { padding: 72px 12px 30px; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .stat-card { padding: 12px 8px; flex-direction: column; text-align: center; gap: 8px; }
+      .stat-icon { width: 36px; height: 36px; font-size: 1rem; }
+      .stat-label { font-size: 0.7rem; }
+      .stat-value { font-size: 1.1rem; }
+      .card-header { padding: 14px 16px; }
+      .search-box { width: 100%; }
+      .search-box input { padding: 8px 12px 8px 34px; font-size: 0.85rem; }
+      .el-table td { padding: 8px !important; }
+      .el-button--mini { padding: 5px 8px !important; font-size: 0.7rem !important; }
+      .preview-img, .preview-video { height: 70px; }
+    }
+
+    /* 滚动条 */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
   </style>
-  <script src="https://js.sentry-cdn.com/219f636ac7bde5edab2c3e16885cb535.min.js" crossorigin="anonymous"></script>
 </head>
-
 <body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" class="logo">
+        <div class="logo-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+        <span>Telegraph-Image</span>
+      </a>
+      <nav class="nav-links">
+        <a href="./admin-imgtc.html" class="nav-link">
+          <i class="fas fa-th"></i> <span>网格</span>
+        </a>
+        <a href="./admin-waterfall.html" class="nav-link">
+          <i class="fas fa-images"></i> <span>瀑布</span>
+        </a>
+        <button class="theme-toggle" id="themeToggle" title="切换主题">
+          <i class="fas fa-moon"></i>
+        </button>
+      </nav>
+    </div>
+  </header>
+
   <div id="app">
-    <el-container>
-      <el-header>
-        <div style="
-         margin: auto;
-         line-height: 60px;
-         font-size: xx-large;
-         position: relative;
-     ">Dashboard
-
-
-          <span style="
-     position: absolute;
-     right: 0px;
-      ">
-            <a href="./admin-imgtc.html">
-              <el-button size="mini" type="warning">网格视图</el-button>
-            </a>
-            <a href="./admin-waterfall.html">
-              <el-button size="mini" type="primary">瀑布流</el-button>
-            </a>
-            <el-button v-if="showLogoutButton" size="mini" type="info" @click="handleLogout()">退出登录</el-button></span>
+    <div class="main-container">
+      <!-- 统计卡片 -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-database"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">记录总数量</div>
+            <div class="stat-value">{{ Number }}</div>
+          </div>
         </div>
-      </el-header>
-      <el-main><el-row :gutter="12">
-          <el-col :span="24">
-            <el-card shadow="always">
-              记录总数量:
-              {{ Number }}
-            </el-card>
-          </el-col>
-          <!--<el-col :span="8">
-              <el-card shadow="hover">
-                <el-tooltip class="item" effect="dark" content="白名单数量" placement="top-start">
-                   
-                </el-tooltip>
-                白名单数量：{{ WhiteList }}
-              </el-card>
-            </el-col>
-            <el-col :span="8">
-              <el-card shadow="hover">
-                <el-tooltip class="item" effect="dark" content="黑名单数量" placement="top-start">
-                
-              </el-tooltip>
-              黑名单数量：{{ BlackList }}
-              </el-card>
-            </el-col>-->
-        </el-row>
-        <template>
-          <el-table :data="tableData.filter(data => !search || data.name.toLowerCase().includes(search.toLowerCase()))"
-            style="width: 100%">
-            <el-table-column label="name" prop="name">
-            </el-table-column>
-            <el-table-column label="preview" prop="preview" align="center">
-              <template slot-scope="scope">
-                <video v-if="scope.row.name.indexOf('.mp4')>0" style="width: 100%; height: 180px;" controls>
-                  <source :src="'/file/'+scope.row.name" type="video/mp4">
-                </video>
-                <el-image v-else style="width: 100%; height: 100%;" :src="'/file/'+scope.row.name" :zoom-rate="1.2"
-                  :preview-src-list="['/file/'+scope.row.name]" fit="cover" lazy />
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-image"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">图片文件</div>
+            <div class="stat-value">{{ imageCount }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fas fa-video"></i></div>
+          <div class="stat-info">
+            <div class="stat-label">视频文件</div>
+            <div class="stat-value">{{ videoCount }}</div>
+          </div>
+        </div>
+      </div>
 
-              </template>
-            </el-table-column>
-            <el-table-column label="data" prop="data">
-              <template slot-scope="scope">
-                <el-popover trigger="hover" placement="top">
-                  <p>{{ scope.row.metadata }}</p>
-                  <div slot="reference" class="name-wrapper">
-                    <el-tag size="medium">{{ scope.row.metadata }}</el-tag>
-                  </div>
-                </el-popover>
-              </template>
-            </el-table-column>
-            <el-table-column align="right">
-              <template slot="header" slot-scope="scope">
-                <el-input v-model="search" @input="handleSearch" size="mini" placeholder="输入关键字搜索" />
-              </template>
-              <template slot-scope="scope">
-                <el-button size="mini" type="primary" @click="handleCopy(scope.$index,scope.row.name)">复制地址</el-button>
-                <el-button size="mini" type="primary" @click="handleWhite(scope.$index,scope.row.name)">白名单</el-button>
-                <el-button size="mini" type="info" @click="handleBlock(scope.$index,scope.row.name)">黑名单</el-button>
-                <el-button size="mini" type="danger" @click="handleDelete(scope.$index,scope.row.name)">删除</el-button>
-              </template>
-            </el-table-column>
-            </el-table>
-            <el-button v-if="nextCursor" style="margin-top:16px" @click="loadMore">加载更多</el-button>
-          </template>
-        </el-main>
-    </el-container>
+      <!-- 表格卡片 -->
+      <div class="content-card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fas fa-list-ul"></i>
+            文件列表
+          </div>
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input v-model="search" @input="handleSearch" placeholder="输入关键字搜索..." />
+          </div>
+        </div>
+
+        <el-table
+          :data="tableData"
+          style="width: 100%"
+          stripe
+          v-loading="loading"
+          element-loading-text="加载中..."
+          element-loading-background="rgba(255,255,255,0.8)">
+          <el-table-column label="文件名" prop="name" min-width="180">
+            <template slot-scope="scope">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <i :class="scope.row.name.indexOf('.mp4')>0 ? 'fas fa-video' : 'fas fa-image'"
+                   style="color:var(--text-muted);font-size:0.9rem;"></i>
+                <span style="font-weight:500;word-break:break-all;">{{ scope.row.name }}</span>
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="预览" prop="preview" align="center" width="140">
+            <template slot-scope="scope">
+              <video v-if="scope.row.name.indexOf('.mp4')>0" class="preview-video" controls>
+                <source :src="'/file/'+scope.row.name" type="video/mp4">
+              </video>
+              <el-image v-else
+                class="preview-img"
+                :src="'/file/'+scope.row.name"
+                :preview-src-list="['/file/'+scope.row.name]"
+                fit="cover"
+                lazy />
+            </template>
+          </el-table-column>
+
+          <el-table-column label="状态" prop="data" width="120">
+            <template slot-scope="scope">
+              <el-popover trigger="hover" placement="top">
+                <p style="max-width:300px;word-break:break-all;">{{ scope.row.metadata }}</p>
+                <div slot="reference">
+                  <el-tag size="medium" :type="getTagType(scope.row.metadata)">
+                    {{ getTagText(scope.row.metadata) }}
+                  </el-tag>
+                </div>
+              </el-popover>
+            </template>
+          </el-table-column>
+
+          <el-table-column align="right" width="280">
+            <template slot-scope="scope">
+              <el-button size="mini" type="primary" @click="handleCopy(scope.$index,scope.row.name)">
+                <i class="fas fa-copy" style="margin-right:4px;"></i>复制
+              </el-button>
+              <el-button size="mini" type="warning" @click="handleWhite(scope.$index,scope.row.name)">
+                <i class="fas fa-shield-alt" style="margin-right:4px;"></i>白名单
+              </el-button>
+              <el-button size="mini" type="info" @click="handleBlock(scope.$index,scope.row.name)">
+                <i class="fas fa-ban" style="margin-right:4px;"></i>黑名单
+              </el-button>
+              <el-button size="mini" type="danger" @click="handleDelete(scope.$index,scope.row.name)">
+                <i class="fas fa-trash-alt" style="margin-right:4px;"></i>删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div class="load-more-wrap" v-if="nextCursor">
+          <button class="load-more-btn" @click="loadMore">
+            <i class="fas fa-chevron-down"></i> 加载更多
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
-</body>
-<!-- import Vue before Element -->
-<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"
-  integrity="sha256-kXTEJcRFN330VirZFl6gj9+UM6gIKW195fYZeR3xDhc=" crossorigin="anonymous"></script>
-<!-- import JavaScript -->
-<script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.3/lib/index.js"
-  integrity="sha256-OFVFYfqhQ9nDnKh+NfIsefpy/fnjTwkK909ZYgo45nw=" crossorigin="anonymous"></script>
-<script>
-  var app = new Vue({
-    el: '#app',
-    data: {
-      Number: 0,
-      WhiteList: 0,
+
+  <!-- import Vue before Element -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"
+    integrity="sha256-kXTEJcRFN330VirZFl6gj9+UM6gIKW195fYZeR3xDhc=" crossorigin="anonymous"></script>
+  <!-- import JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.3/lib/index.js"
+    integrity="sha256-OFVFYfqhQ9nDnKh+NfIsefpy/fnjTwkK909ZYgo45nw=" crossorigin="anonymous"></script>
+  <script>
+    var app = new Vue({
+      el: '#app',
+      data: {
+        Number: 0,
+        WhiteList: 0,
         BlackList: 0,
         showLogoutButton: false,
         tableData: [],
         nextCursor: null,
-      dialogFormVisible: false,
-      formLabelWidth: '120px',
-      form: {
-        name: '',
-        id: ''
+        dialogFormVisible: false,
+        formLabelWidth: '120px',
+        form: { name: '', id: '' },
+        search: '',
+        password: '123456',
+        searchTimer: null,
+        loading: true
       },
-      search: '',
-      password: '123456',
-      searchTimer: null
-    },
-    methods: {
-      handleBlock(index, key) {
-        console.log(key);
-        if (confirm("确认加入黑名单吗?")) {
-          console.log("Yes")
-          var requestOptions = {
-            method: 'GET',
-            redirect: 'follow',
-            //include authorization credientials
-            credentials: 'include'
-          };
-
-          fetch("./api/manage/block/" + key, requestOptions)
-            .then(response => response.text())
-            .then(result => {
-              console.log(result);
-              this.tableData[index].metadata = result;
-            })
-            .catch(error => { alert("An error occurred while synchronizing data with the server, please check the network connection"); console.log('error', error) });
-
-        } else {
-          console.log("No")
+      computed: {
+        imageCount() {
+          return this.tableData.filter(r => r.name && !r.name.endsWith('.mp4')).length;
+        },
+        videoCount() {
+          return this.tableData.filter(r => r.name && r.name.endsWith('.mp4')).length;
         }
       },
-      handleDelete(index, key) {
-        console.log(key);
-        if (confirm("确认删除该条记录吗?")) {
-          console.log("Yes")
-          var requestOptions = {
-            method: 'GET',
-            redirect: 'follow',
-            //include authorization credientials
-            credentials: 'include'
-          };
-
-          fetch("./api/manage/delete/" + key, requestOptions)
-            .then(response => response.text())
-            .then(result => { console.log(result); this.tableData.remove(index); })
-            .catch(error => { alert("An error occurred while synchronizing data with the server, please check the network connection"); console.log('error', error) });
-
-        } else {
-          console.log("No")
-        }
-      },
-      handleWhite(index, key) {
-        console.log(key);
-        if (confirm("确认加入白名单吗?")) {
-          console.log("Yes")
-          var requestOptions = {
-            method: 'GET',
-            redirect: 'follow',
-            //include authorization credientials
-            credentials: 'include'
-          };
-          fetch("./api/manage/white/" + key, requestOptions)
-            .then(response => response.text())
-            .then(result => { console.log(result); this.tableData[index].metadata = result; })
-            .catch(error => { alert("An error occurred while synchronizing data with the server, please check the network connection"); console.log('error', error) });
-
-        } else {
-          console.log("No")
-        }
-
-      },
-      handleLogout() {
-        window.location.href = "./api/manage/logout";
-      },
-      handleCopy(index, key) {
-        const text = `${document.location.origin}/file/${key}`;
-        if (navigator.clipboard) {
-          // clipboard api 复制
-          navigator.clipboard.writeText(text);
-        } else {
-          const textarea = document.createElement('textarea');
-          document.body.appendChild(textarea);
-          // 隐藏此输入框
-          textarea.style.position = 'fixed';
-          textarea.style.clip = 'rect(0 0 0 0)';
-          textarea.style.top = '10px';
-          // 赋值
-          textarea.value = text;
-          // 选中
-          textarea.select();
-          // 复制
-          document.execCommand('copy', true);
-          // 移除输入框
-          document.body.removeChild(textarea);
-        }
-        this.$message({
-          message: '复制文件链接成功~',
-          type: 'success'
-        });
-      },
-      handleSearch() {
-        clearTimeout(this.searchTimer);
-        this.searchTimer = setTimeout(() => {
-          this.tableData = [];
-          this.nextCursor = null;
+      methods: {
+        getTagType(meta) {
+          if (!meta) return 'info';
+          if (meta.includes('白名单')) return 'success';
+          if (meta.includes('黑名单')) return 'danger';
+          return 'info';
+        },
+        getTagText(meta) {
+          if (!meta) return '正常';
+          if (meta.includes('白名单')) return '白名单';
+          if (meta.includes('黑名单')) return '黑名单';
+          return '正常';
+        },
+        handleBlock(index, key) {
+          if (confirm("确认加入黑名单吗?")) {
+            var requestOptions = {
+              method: 'GET', redirect: 'follow', credentials: 'include'
+            };
+            fetch("./api/manage/block/" + key, requestOptions)
+              .then(response => response.text())
+              .then(result => { this.tableData[index].metadata = result; })
+              .catch(error => {
+                alert("同步数据时发生错误，请检查网络连接");
+                console.log('error', error);
+              });
+          }
+        },
+        handleDelete(index, key) {
+          if (confirm("确认删除该条记录吗?")) {
+            var requestOptions = {
+              method: 'GET', redirect: 'follow', credentials: 'include'
+            };
+            fetch("./api/manage/delete/" + key, requestOptions)
+              .then(response => response.text())
+              .then(result => { this.tableData.remove(index); })
+              .catch(error => {
+                alert("同步数据时发生错误，请检查网络连接");
+                console.log('error', error);
+              });
+          }
+        },
+        handleWhite(index, key) {
+          if (confirm("确认加入白名单吗?")) {
+            var requestOptions = {
+              method: 'GET', redirect: 'follow', credentials: 'include'
+            };
+            fetch("./api/manage/white/" + key, requestOptions)
+              .then(response => response.text())
+              .then(result => { this.tableData[index].metadata = result; })
+              .catch(error => {
+                alert("同步数据时发生错误，请检查网络连接");
+                console.log('error', error);
+              });
+          }
+        },
+        handleLogout() {
+          window.location.href = "./api/manage/logout";
+        },
+        handleCopy(index, key) {
+          const text = `${document.location.origin}/file/${key}`;
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(text);
+          } else {
+            const textarea = document.createElement('textarea');
+            document.body.appendChild(textarea);
+            textarea.style.position = 'fixed';
+            textarea.style.clip = 'rect(0 0 0 0)';
+            textarea.style.top = '10px';
+            textarea.value = text;
+            textarea.select();
+            document.execCommand('copy', true);
+            document.body.removeChild(textarea);
+          }
+          this.$message({ message: '复制文件链接成功~', type: 'success' });
+        },
+        handleSearch() {
+          clearTimeout(this.searchTimer);
+          this.searchTimer = setTimeout(() => {
+            this.tableData = [];
+            this.nextCursor = null;
+            this.loading = true;
+            const opts = { method: 'GET', redirect: 'follow', credentials: 'include' };
+            const base = this.search
+              ? `./api/manage/list?limit=100&prefix=${encodeURIComponent(this.search)}`
+              : `./api/manage/list?limit=100`;
+            fetch(base, opts)
+              .then(r => r.json())
+              .then(result => {
+                this.tableData = result.keys || [];
+                this.nextCursor = result.list_complete ? null : result.cursor;
+                this.Number = this.tableData.length;
+                this.loading = false;
+              })
+              .catch(() => {
+                alert("搜索失败，请检查网络");
+                this.loading = false;
+              });
+          }, 300);
+        },
+        loadMore() {
           const opts = { method: 'GET', redirect: 'follow', credentials: 'include' };
           const base = this.search
             ? `./api/manage/list?limit=100&prefix=${encodeURIComponent(this.search)}`
             : `./api/manage/list?limit=100`;
-          fetch(base, opts)
+          const url = this.nextCursor
+            ? `${base}&cursor=${encodeURIComponent(this.nextCursor)}`
+            : base;
+
+          fetch(url, opts)
             .then(r => r.json())
             .then(result => {
-              this.tableData = result.keys || [];
+              this.tableData = this.tableData.concat(result.keys || []);
               this.nextCursor = result.list_complete ? null : result.cursor;
               this.Number = this.tableData.length;
             })
-            .catch(() => alert("搜索失败，请检查网络"));
-        }, 300);
+            .catch(() => alert("同步失败，请检查网络"));
+        },
       },
-      loadMore() {
-        const opts = { method: 'GET', redirect: 'follow', credentials: 'include' };
-        const base = this.search
-          ? `./api/manage/list?limit=100&prefix=${encodeURIComponent(this.search)}`
-          : `./api/manage/list?limit=100`;
-        const url = this.nextCursor
-          ? `${base}&cursor=${encodeURIComponent(this.nextCursor)}`
-          : base;
 
-        fetch(url, opts)
-          .then(r => r.json())
+      mounted() {
+        Array.prototype.remove = function (from, to) {
+          var rest = this.slice((to || from) + 1 || this.length);
+          this.length = from < 0 ? this.length + from : from;
+          return this.push.apply(this, rest);
+        };
+
+        var requestOptions = {
+          method: 'GET', redirect: 'follow', credentials: 'include'
+        };
+
+        fetch("./api/manage/check", requestOptions)
+          .then(response => response.text())
           .then(result => {
-            this.tableData = this.tableData.concat(result.keys || []);
-            this.nextCursor = result.list_complete ? null : result.cursor;
-            this.Number = this.tableData.length;
+            if (result == "true") {
+              this.showLogoutButton = true;
+            } else if (result == "Not using basic auth.") {
+            } else {
+              window.location.href = "./api/manage/login";
+            }
           })
-          .catch(() => alert("同步失败，请检查网络"));
-      },
-    },
-
-    mounted() {
-      //check if the user is logged in
-      //read the basic auth credientials from the browser
-      var requestOptions = {
-        method: 'GET',
-        redirect: 'follow',
-        //include authorization credientials
-        credentials: 'include'
-      };
-      fetch("./api/manage/check", requestOptions)
-        .then(response => response.text())
-        .then(result => {
-          console.log(result);
-          if (result == "true") {
-            this.showLogoutButton = true;
-          } else if (result == "Not using basic auth.") {
-
-          }
-          else {
-            window.location.href = "./api/manage/login";
-          }
-        })
-        .catch(error => { alert("An error occurred while synchronizing data with the server, please check the network connection"); console.log('error', error) });
-
-
-
-      Array.prototype.remove = function (from, to) {
-        var rest = this.slice((to || from) + 1 || this.length);
-        this.length = from < 0 ? this.length + from : from;
-        return this.push.apply(this, rest);
-      };
-      var requestOptions = {
-        method: 'GET',
-        redirect: 'follow',
-        //include authorization credientials
-        credentials: 'include'
-
-      };
-
+          .catch(error => {
+            alert("同步数据时发生错误，请检查网络连接");
+            console.log('error', error);
+          });
 
         fetch("./api/manage/list?limit=100", requestOptions)
-        //判断是否需要登录
-        .then(response => {
-          if (response.status == 401) {
-            alert("请先登录");
-            window.location.href = "./api/manage/login";
-          }
-          else {
-            return response;
-          }
-        })
-        .then(response => response.json())
-        .then(result => {
-          this.tableData = result.keys || [];
-          this.nextCursor = result.list_complete ? null : result.cursor;
-          console.log(result);
-          this.Number = this.tableData.length;
-        })
-        .catch(error => { alert("An error occurred while synchronizing data with the server, please check the network connection"); console.log('error', error) });
+          .then(response => {
+            if (response.status == 401) {
+              alert("请先登录");
+              window.location.href = "./api/manage/login";
+            } else {
+              return response;
+            }
+          })
+          .then(response => response.json())
+          .then(result => {
+            this.tableData = result.keys || [];
+            this.nextCursor = result.list_complete ? null : result.cursor;
+            this.Number = this.tableData.length;
+            this.loading = false;
+          })
+          .catch(error => {
+            alert("同步数据时发生错误，请检查网络连接");
+            console.log('error', error);
+            this.loading = false;
+          });
+      }
+    });
 
+    // ==================== 主题切换 ====================
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = themeToggle.querySelector('i');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if (savedTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      themeIcon.className = 'fas fa-sun';
     }
-  })
-
-</script><!-- Hotjar Tracking Code -->
-<script>
-    (function (h, o, t, j, a, r) {
-      h.hj = h.hj || function () { (h.hj.q = h.hj.q || []).push(arguments) };
-      h._hjSettings = { hjid: 2531461, hjsv: 6 };
-      a = o.getElementsByTagName('head')[0];
-      r = o.createElement('script'); r.async = 1;
-      r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
-      a.appendChild(r);
-    })(window, document, 'https://static.hotjar.com/c/hotjar-', '.js?sv=');
-</script>
-<script type="text/javascript">
-  (function (c, l, a, r, i, t, y) {
-    c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
-    t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
-    y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
-  })(window, document, "clarity", "script", "7t5ai7agat");
-</script>
-
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+        themeIcon.className = 'fas fa-moon';
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+        themeIcon.className = 'fas fa-sun';
+      }
+    });
+  </script>
+</body>
 </html>
