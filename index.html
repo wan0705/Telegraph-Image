@@ -11,9 +11,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
-            --primary: #0297f8;
-            --primary-dark: #0075ff;
-            --primary-light: #e6f4ff;
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --primary-light: #d1fae5;
             --bg: #f0f4f8;
             --surface: #ffffff;
             --surface-hover: #f5f7fa;
@@ -55,6 +55,8 @@
             transition: var(--transition);
             line-height: 1.6;
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         /* 动态背景 */
@@ -68,7 +70,7 @@
             position: absolute;
             top: -30%; right: -20%;
             width: 700px; height: 700px;
-            background: radial-gradient(circle, rgba(2,151,248,0.15) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%);
             animation: float 20s ease-in-out infinite;
         }
         .bg-decoration::after {
@@ -76,7 +78,7 @@
             position: absolute;
             bottom: -20%; left: -10%;
             width: 500px; height: 500px;
-            background: radial-gradient(circle, rgba(2,151,248,0.08) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%);
             animation: float 25s ease-in-out infinite reverse;
         }
         @keyframes float {
@@ -148,6 +150,9 @@
             border: 1px solid var(--border); transition: var(--transition);
             overflow: hidden; min-height: 420px;
         }
+        @media (max-width: 768px) {
+            .upload-card { min-height: 350px; }
+        }
         .upload-card:hover { box-shadow: 0 20px 50px rgba(0,0,0,0.15); }
 
         /* ===== 等待上传状态 ===== */
@@ -207,11 +212,11 @@
             color: white; border: none; border-radius: 40px;
             font-weight: 600; font-size: 0.95rem; cursor: pointer;
             transition: var(--transition);
-            box-shadow: 0 4px 20px rgba(2,151,248,0.4);
+            box-shadow: 0 4px 20px rgba(16,185,129,0.4);
         }
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(2,151,248,0.5);
+            box-shadow: 0 6px 30px rgba(16,185,129,0.5);
         }
         .btn-primary:active { transform: translateY(0); }
 
@@ -290,7 +295,7 @@
         }
         .input-group:focus-within {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(2,151,248,0.1);
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
         }
         .url-input {
             flex: 1; border: none; background: transparent;
@@ -354,7 +359,7 @@
         }
         .format-textarea:focus {
             outline: none; border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(2,151,248,0.1);
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
         }
         .format-actions {
             display: flex; gap: 10px; margin-top: 12px;
@@ -446,12 +451,46 @@
 
         /* 响应式 */
         @media (max-width: 768px) {
-            .header { padding: 16px 20px; }
-            .hero h1 { font-size: 1.6rem; }
-            .upload-card { margin: 0 -10px; border-radius: var(--radius); }
-            .state-waiting, .state-uploading, .state-done, .state-error { padding: 30px 20px; }
-            .url-box { flex-direction: column; }
-            .reupload-btn { width: 100%; height: 44px; }
+            .header { padding: 12px 16px; }
+            .hero { margin-bottom: 20px; padding: 5px 0; }
+            .hero h1 { font-size: 1.5rem; }
+            .hero p { font-size: 0.85rem; padding: 0 10px; }
+            .upload-card { margin: 0; border-radius: var(--radius); }
+            .state-waiting, .state-uploading, .state-done, .state-error { 
+                padding: 30px 16px; min-height: 350px; 
+            }
+            .upload-icon-wrapper { width: 80px; height: 80px; }
+            .upload-icon-box { width: 56px; height: 56px; }
+            .upload-hint { font-size: 0.8rem; padding: 0 10px; }
+            .btn-primary { padding: 10px 24px; font-size: 0.9rem; }
+            .url-box { flex-direction: column; width: 100%; }
+            .reupload-btn { width: 100%; height: 44px; margin-top: 8px; }
+            .format-tabs { flex-wrap: wrap; justify-content: center; }
+            .format-tab { padding: 6px 12px; font-size: 0.8rem; }
+            .features { grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
+            .feature-card { padding: 16px; }
+            .feature-icon { width: 40px; height: 40px; font-size: 1.1rem; }
+            .feature-title { font-size: 0.9rem; }
+            .feature-desc { font-size: 0.75rem; }
+            .done-icon, .error-icon, .uploading-icon { width: 64px; height: 64px; }
+            .done-icon { font-size: 1.5rem; }
+            .done-title { font-size: 1.1rem; }
+            .main-container { padding: 10px 12px 40px; }
+            .logo { font-size: 1.1rem; }
+            .logo-icon { width: 32px; height: 32px; font-size: 1rem; }
+            .nav-link { padding: 6px 10px; font-size: 0.8rem; }
+            .theme-toggle { width: 36px; height: 36px; }
+            .format-textarea { min-height: 60px; font-size: 0.8rem; }
+            .url-input { padding: 10px 12px; font-size: 0.8rem; }
+            .footer { padding: 24px 16px; font-size: 0.75rem; }
+            .toast { min-width: 240px; padding: 12px 16px; }
+        }
+
+        @media (max-width: 480px) {
+            .features { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 1.3rem; }
+            .upload-icon-wrapper { width: 70px; height: 70px; }
+            .upload-icon-box { width: 50px; height: 50px; }
         }
 
         /* 滚动条 */
@@ -473,10 +512,10 @@
         </a>
         <nav class="nav-links">
             <a href="/admin" class="nav-link">
-                <i class="fas fa-th-large"></i> 管理
+                <i class="fas fa-th-large"></i>
             </a>
             <a href="https://github.com/cf-pages/Telegraph-Image" target="_blank" class="nav-link">
-                <i class="fab fa-github"></i> GitHub
+                <i class="fab fa-github"></i>
             </a>
             <button class="theme-toggle" id="themeToggle" title="切换主题">
                 <i class="fas fa-moon"></i>
@@ -497,7 +536,7 @@
                     <div class="upload-icon-box">
                         <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
                             <path d="M422.4 704l-94.72-143.36c-15.36-23.04-46.08-30.72-71.68-15.36l-15.36 15.36-130.56 204.8c-12.8 25.6-7.68 56.32 17.92 71.68 7.68 5.12 17.92 7.68 25.6 7.68h256c28.16 0 51.2-23.04 51.2-51.2 0-7.68-2.56-15.36-5.12-23.04l-33.28-66.56z" fill="#A5C8F4"/>
-                            <path d="M307.2 358.4c-43.52 0-76.8-33.28-76.8-76.8s33.28-76.8 76.8-76.8 76.8 33.28 76.8 76.8-33.28 76.8-76.8 76.8z m327.68-33.28c5.12-7.68 12.8-15.36 20.48-17.92 25.6-12.8 56.32 0 69.12 23.04L944.64 793.6c2.56 7.68 5.12 15.36 5.12 23.04 0 28.16-23.04 51.2-51.2 51.2H378.88c-10.24 0-20.48-2.56-30.72-10.24-23.04-15.36-28.16-48.64-12.8-71.68l56.32-79.36 243.2-381.44z" fill="#0297f8"/>
+                            <path d="M307.2 358.4c-43.52 0-76.8-33.28-76.8-76.8s33.28-76.8 76.8-76.8 76.8 33.28 76.8 76.8-33.28 76.8-76.8 76.8z m327.68-33.28c5.12-7.68 12.8-15.36 20.48-17.92 25.6-12.8 56.32 0 69.12 23.04L944.64 793.6c2.56 7.68 5.12 15.36 5.12 23.04 0 28.16-23.04 51.2-51.2 51.2H378.88c-10.24 0-20.48-2.56-30.72-10.24-23.04-15.36-28.16-48.64-12.8-71.68l56.32-79.36 243.2-381.44z" fill="#10b981"/>
                         </svg>
                     </div>
                 </div>
@@ -515,7 +554,7 @@
             <div class="state-uploading" id="stateUploading">
                 <div class="uploading-icon">
                     <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M554.666667 268.8v601.6h-85.333334V268.8L337.066667 401.066667 277.333333 341.333333 512 106.666667 746.666667 341.333333l-59.733334 59.733334L554.666667 268.8z" fill="#0297f8"/>
+                        <path d="M554.666667 268.8v601.6h-85.333334V268.8L337.066667 401.066667 277.333333 341.333333 512 106.666667 746.666667 341.333333l-59.733334 59.733334L554.666667 268.8z" fill="#10b981"/>
                     </svg>
                 </div>
                 <div class="uploading-text">
