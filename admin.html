@@ -106,9 +106,6 @@
       white-space: nowrap;
     }
     .nav-link:hover { color: var(--primary); background: var(--primary-bg); border-color: var(--primary-light); }
-    .nav-link.active {
-      background: var(--primary-bg); color: var(--primary); border-color: var(--primary-light);
-    }
     .theme-toggle {
       width: 38px; height: 38px; border-radius: 10px;
       border: 1px solid var(--border); background: var(--surface);
@@ -196,10 +193,7 @@
       font-size: 0.9rem;
     }
 
-    /* ========== Element UI 表格美化 ========== */
-    .el-table {
-      background: transparent !important;
-    }
+    /* ========== Element UI 表格轻量美化（保留原始结构） ========== */
     .el-table th {
       background: var(--bg) !important;
       color: var(--text-secondary) !important;
@@ -210,27 +204,22 @@
     .el-table td {
       border-bottom: 1px solid var(--border) !important;
       padding: 12px 16px !important;
-      background: var(--surface) !important;
       color: var(--text) !important;
     }
     .el-table--enable-row-hover .el-table__body tr:hover > td {
       background: var(--surface-hover) !important;
     }
     .el-table::before { display: none; }
-    .el-table__empty-block { background: var(--surface); }
-    .el-table__empty-text { color: var(--text-muted); }
 
     /* 图片预览 */
-    .preview-img {
-      width: 100%; height: 100px; object-fit: cover;
-      border-radius: 8px; cursor: pointer;
-      transition: var(--transition);
-      border: 1px solid var(--border);
+    .el-image__inner.el-image__inner {
+      width: 100%;
+      height: 90px;
+      border-radius: 8px;
+      object-fit: cover;
     }
-    .preview-img:hover { transform: scale(1.02); box-shadow: var(--shadow); }
-    .preview-video {
-      width: 100%; height: 100px; border-radius: 8px;
-      border: 1px solid var(--border); background: #000;
+    .el-image {
+      text-align: center;
     }
 
     /* 标签 */
@@ -279,6 +268,7 @@
       border-color: #f59e0b !important;
     }
     .el-button--mini { padding: 7px 12px !important; }
+    .el-button+.el-button { margin: 0 !important; }
 
     /* 分页/加载更多 */
     .load-more-wrap {
@@ -331,7 +321,7 @@
       .search-box input { padding: 8px 12px 8px 34px; font-size: 0.85rem; }
       .el-table td { padding: 8px !important; }
       .el-button--mini { padding: 5px 8px !important; font-size: 0.7rem !important; }
-      .preview-img, .preview-video { height: 70px; }
+      .el-image__inner.el-image__inner { height: 70px; }
     }
 
     /* 滚动条 */
@@ -402,73 +392,48 @@
           </div>
         </div>
 
-        <el-table
-          :data="tableData"
-          style="width: 100%"
-          stripe
-          v-loading="loading"
-          element-loading-text="加载中..."
-          element-loading-background="rgba(255,255,255,0.8)">
-          <el-table-column label="文件名" prop="name" min-width="180">
-            <template slot-scope="scope">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <i :class="scope.row.name.indexOf('.mp4')>0 ? 'fas fa-video' : 'fas fa-image'"
-                   style="color:var(--text-muted);font-size:0.9rem;"></i>
-                <span style="font-weight:500;word-break:break-all;">{{ scope.row.name }}</span>
-              </div>
-            </template>
-          </el-table-column>
-
-          <el-table-column label="预览" prop="preview" align="center" width="140">
-            <template slot-scope="scope">
-              <video v-if="scope.row.name.indexOf('.mp4')>0" class="preview-video" controls>
-                <source :src="'/file/'+scope.row.name" type="video/mp4">
-              </video>
-              <el-image v-else
-                class="preview-img"
-                :src="'/file/'+scope.row.name"
-                :preview-src-list="['/file/'+scope.row.name]"
-                fit="cover"
-                lazy />
-            </template>
-          </el-table-column>
-
-          <el-table-column label="状态" prop="data" width="120">
-            <template slot-scope="scope">
-              <el-popover trigger="hover" placement="top">
-                <p style="max-width:300px;word-break:break-all;">{{ scope.row.metadata }}</p>
-                <div slot="reference">
-                  <el-tag size="medium" :type="getTagType(scope.row.metadata)">
-                    {{ getTagText(scope.row.metadata) }}
-                  </el-tag>
-                </div>
-              </el-popover>
-            </template>
-          </el-table-column>
-
-          <el-table-column align="right" width="280">
-            <template slot-scope="scope">
-              <el-button size="mini" type="primary" @click="handleCopy(scope.$index,scope.row.name)">
-                <i class="fas fa-copy" style="margin-right:4px;"></i>复制
-              </el-button>
-              <el-button size="mini" type="warning" @click="handleWhite(scope.$index,scope.row.name)">
-                <i class="fas fa-shield-alt" style="margin-right:4px;"></i>白名单
-              </el-button>
-              <el-button size="mini" type="info" @click="handleBlock(scope.$index,scope.row.name)">
-                <i class="fas fa-ban" style="margin-right:4px;"></i>黑名单
-              </el-button>
-              <el-button size="mini" type="danger" @click="handleDelete(scope.$index,scope.row.name)">
-                <i class="fas fa-trash-alt" style="margin-right:4px;"></i>删除
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-
-        <div class="load-more-wrap" v-if="nextCursor">
-          <button class="load-more-btn" @click="loadMore">
-            <i class="fas fa-chevron-down"></i> 加载更多
-          </button>
-        </div>
+        <template>
+          <el-table :data="tableData.filter(data => !search || data.name.toLowerCase().includes(search.toLowerCase()))"
+            style="width: 100%">
+            <el-table-column label="name" prop="name">
+            </el-table-column>
+            <el-table-column label="preview" prop="preview" align="center">
+              <template slot-scope="scope">
+                <video v-if="scope.row.name.indexOf('.mp4')>0" style="width: 100%; height: 180px;" controls>
+                  <source :src="'/file/'+scope.row.name" type="video/mp4">
+                </video>
+                <el-image v-else style="width: 100%; height: 100%;" :src="'/file/'+scope.row.name" :zoom-rate="1.2"
+                  :preview-src-list="['/file/'+scope.row.name]" fit="cover" lazy />
+              </template>
+            </el-table-column>
+            <el-table-column label="data" prop="data">
+              <template slot-scope="scope">
+                <el-popover trigger="hover" placement="top">
+                  <p>{{ scope.row.metadata }}</p>
+                  <div slot="reference" class="name-wrapper">
+                    <el-tag size="medium" :type="getTagType(scope.row.metadata)">{{ getTagText(scope.row.metadata) }}</el-tag>
+                  </div>
+                </el-popover>
+              </template>
+            </el-table-column>
+            <el-table-column align="right">
+              <template slot="header" slot-scope="scope">
+                <el-input v-model="search" @input="handleSearch" size="mini" placeholder="输入关键字搜索" />
+              </template>
+              <template slot-scope="scope">
+                <el-button size="mini" type="primary" @click="handleCopy(scope.$index,scope.row.name)">复制地址</el-button>
+                <el-button size="mini" type="primary" @click="handleWhite(scope.$index,scope.row.name)">白名单</el-button>
+                <el-button size="mini" type="info" @click="handleBlock(scope.$index,scope.row.name)">黑名单</el-button>
+                <el-button size="mini" type="danger" @click="handleDelete(scope.$index,scope.row.name)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div class="load-more-wrap" v-if="nextCursor">
+            <button class="load-more-btn" @click="loadMore">
+              <i class="fas fa-chevron-down"></i> 加载更多
+            </button>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -494,8 +459,7 @@
         form: { name: '', id: '' },
         search: '',
         password: '123456',
-        searchTimer: null,
-        loading: true
+        searchTimer: null
       },
       computed: {
         imageCount() {
@@ -519,45 +483,57 @@
           return '正常';
         },
         handleBlock(index, key) {
+          console.log(key);
           if (confirm("确认加入黑名单吗?")) {
+            console.log("Yes")
             var requestOptions = {
-              method: 'GET', redirect: 'follow', credentials: 'include'
+              method: 'GET',
+              redirect: 'follow',
+              credentials: 'include'
             };
             fetch("./api/manage/block/" + key, requestOptions)
               .then(response => response.text())
-              .then(result => { this.tableData[index].metadata = result; })
-              .catch(error => {
-                alert("同步数据时发生错误，请检查网络连接");
-                console.log('error', error);
-              });
+              .then(result => {
+                console.log(result);
+                this.tableData[index].metadata = result;
+              })
+              .catch(error => { alert("An error occurred while synchronizing data with the server, please check the network connection"); console.log('error', error) });
+          } else {
+            console.log("No")
           }
         },
         handleDelete(index, key) {
+          console.log(key);
           if (confirm("确认删除该条记录吗?")) {
+            console.log("Yes")
             var requestOptions = {
-              method: 'GET', redirect: 'follow', credentials: 'include'
+              method: 'GET',
+              redirect: 'follow',
+              credentials: 'include'
             };
             fetch("./api/manage/delete/" + key, requestOptions)
               .then(response => response.text())
-              .then(result => { this.tableData.remove(index); })
-              .catch(error => {
-                alert("同步数据时发生错误，请检查网络连接");
-                console.log('error', error);
-              });
+              .then(result => { console.log(result); this.tableData.remove(index); })
+              .catch(error => { alert("An error occurred while synchronizing data with the server, please check the network connection"); console.log('error', error) });
+          } else {
+            console.log("No")
           }
         },
         handleWhite(index, key) {
+          console.log(key);
           if (confirm("确认加入白名单吗?")) {
+            console.log("Yes")
             var requestOptions = {
-              method: 'GET', redirect: 'follow', credentials: 'include'
+              method: 'GET',
+              redirect: 'follow',
+              credentials: 'include'
             };
             fetch("./api/manage/white/" + key, requestOptions)
               .then(response => response.text())
-              .then(result => { this.tableData[index].metadata = result; })
-              .catch(error => {
-                alert("同步数据时发生错误，请检查网络连接");
-                console.log('error', error);
-              });
+              .then(result => { console.log(result); this.tableData[index].metadata = result; })
+              .catch(error => { alert("An error occurred while synchronizing data with the server, please check the network connection"); console.log('error', error) });
+          } else {
+            console.log("No")
           }
         },
         handleLogout() {
@@ -578,14 +554,16 @@
             document.execCommand('copy', true);
             document.body.removeChild(textarea);
           }
-          this.$message({ message: '复制文件链接成功~', type: 'success' });
+          this.$message({
+            message: '复制文件链接成功~',
+            type: 'success'
+          });
         },
         handleSearch() {
           clearTimeout(this.searchTimer);
           this.searchTimer = setTimeout(() => {
             this.tableData = [];
             this.nextCursor = null;
-            this.loading = true;
             const opts = { method: 'GET', redirect: 'follow', credentials: 'include' };
             const base = this.search
               ? `./api/manage/list?limit=100&prefix=${encodeURIComponent(this.search)}`
@@ -596,12 +574,8 @@
                 this.tableData = result.keys || [];
                 this.nextCursor = result.list_complete ? null : result.cursor;
                 this.Number = this.tableData.length;
-                this.loading = false;
               })
-              .catch(() => {
-                alert("搜索失败，请检查网络");
-                this.loading = false;
-              });
+              .catch(() => alert("搜索失败，请检查网络"));
           }, 300);
         },
         loadMore() {
@@ -632,30 +606,32 @@
         };
 
         var requestOptions = {
-          method: 'GET', redirect: 'follow', credentials: 'include'
+          method: 'GET',
+          redirect: 'follow',
+          credentials: 'include'
         };
 
         fetch("./api/manage/check", requestOptions)
           .then(response => response.text())
           .then(result => {
+            console.log(result);
             if (result == "true") {
               this.showLogoutButton = true;
             } else if (result == "Not using basic auth.") {
-            } else {
+            }
+            else {
               window.location.href = "./api/manage/login";
             }
           })
-          .catch(error => {
-            alert("同步数据时发生错误，请检查网络连接");
-            console.log('error', error);
-          });
+          .catch(error => { alert("An error occurred while synchronizing data with the server, please check the network connection"); console.log('error', error) });
 
         fetch("./api/manage/list?limit=100", requestOptions)
           .then(response => {
             if (response.status == 401) {
               alert("请先登录");
               window.location.href = "./api/manage/login";
-            } else {
+            }
+            else {
               return response;
             }
           })
@@ -663,14 +639,10 @@
           .then(result => {
             this.tableData = result.keys || [];
             this.nextCursor = result.list_complete ? null : result.cursor;
+            console.log(result);
             this.Number = this.tableData.length;
-            this.loading = false;
           })
-          .catch(error => {
-            alert("同步数据时发生错误，请检查网络连接");
-            console.log('error', error);
-            this.loading = false;
-          });
+          .catch(error => { alert("An error occurred while synchronizing data with the server, please check the network connection"); console.log('error', error) });
       }
     });
 
