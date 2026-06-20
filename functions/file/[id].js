@@ -7,7 +7,7 @@ export async function onRequest(context) {
 
     const url = new URL(request.url);
     let fileUrl = 'https://telegra.ph/' + url.pathname + url.search
-    if (url.pathname.length > 39) { // Path length > 39 indicates file uploaded via Telegram Bot API
+    if (url.pathname.length > 39) {
         const formdata = new FormData();
         formdata.append("file_id", url.pathname);
 
@@ -16,8 +16,6 @@ export async function onRequest(context) {
             body: formdata,
             redirect: "follow"
         };
-        // /file/AgACAgEAAxkDAAMDZt1Gzs4W8dQPWiQJxO5YSH5X-gsAAt-sMRuWNelGOSaEM_9lHHgBAAMCAANtAAM2BA.png
-        //get the AgACAgEAAxkDAAMDZt1Gzs4W8dQPWiQJxO5YSH5X-gsAAt-sMRuWNelGOSaEM_9lHHgBAAMCAANtAAM2BA
         console.log(url.pathname.split(".")[0].split("/")[2])
         const filePath = await getFilePath(env, url.pathname.split(".")[0].split("/")[2]);
         console.log(filePath)
@@ -30,28 +28,22 @@ export async function onRequest(context) {
         body: request.body,
     });
 
-    // If the response is OK, proceed with further checks
-    if (!response.ok) return response;
+    if (!response.ok) return makeInlineResponse(response);
 
-    // Log response details
     console.log(response.ok, response.status);
 
-    // Allow the admin page to directly view the image
     const isAdmin = request.headers.get('Referer')?.includes(`${url.origin}/admin`);
     if (isAdmin) {
-        return response;
+        return makeInlineResponse(response);
     }
 
-    // Check if KV storage is available
     if (!env.img_url) {
         console.log("KV storage not available, returning image directly");
-        return response;  // Directly return image response, terminate execution
+        return makeInlineResponse(response);
     }
 
-    // The following code executes only if KV is available
     let record = await env.img_url.getWithMetadata(params.id);
     if (!record || !record.metadata) {
-        // Initialize metadata if it doesn't exist
         console.log("Metadata not found, initializing...");
         record = {
             metadata: {
@@ -75,21 +67,18 @@ export async function onRequest(context) {
         fileSize: record.metadata.fileSize || 0,
     };
 
-    // Handle based on ListType and Label
     if (metadata.ListType === "White") {
-        return response;
+        return makeInlineResponse(response);
     } else if (metadata.ListType === "Block" || metadata.Label === "adult") {
         const referer = request.headers.get('Referer');
         const redirectUrl = referer ? "https://static-res.pages.dev/teleimage/img-block-compressed.png" : `${url.origin}/block-img.html`;
         return Response.redirect(redirectUrl, 302);
     }
 
-    // Check if WhiteList_Mode is enabled
     if (env.WhiteList_Mode === "true") {
         return Response.redirect(`${url.origin}/whitelist-on.html`, 302);
     }
 
-    // If no metadata or further actions required, moderate content and add to KV if needed
     if (env.ModerateContentApiKey) {
         try {
             console.log("Starting content moderation...");
@@ -114,17 +103,27 @@ export async function onRequest(context) {
             }
         } catch (error) {
             console.error("Error during content moderation: " + error.message);
-            // Moderation failure should not affect user experience, continue processing
         }
     }
 
-    // Only save metadata if content is not adult content
-    // Adult content cases are already handled above and will not reach this point
     console.log("Saving metadata");
     await env.img_url.put(params.id, "", { metadata });
 
-    // Return file content
-    return response;
+    return makeInlineResponse(response);
+}
+
+// 辅助函数：添加 inline 头
+function makeInlineResponse(response) {
+    const newHeaders = new Headers(response.headers);
+    newHeaders.set('Content-Disposition', 'inline');
+    if (!newHeaders.has('Content-Type')) {
+        newHeaders.set('Content-Type', 'image/jpeg');
+    }
+    return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: newHeaders
+    });
 }
 
 async function getFilePath(env, file_id) {
