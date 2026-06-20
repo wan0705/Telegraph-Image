@@ -46,7 +46,11 @@ export async function onRequest(context) {
         body: request.body,
     });
 
-    if (!response.ok) return makeInlineResponse(response, url);
+    // 关键修复：如果获取失败，返回 404 而不是假装是图片
+    if (!response.ok) {
+        console.error('Failed to fetch image:', response.status, fileUrl);
+        return new Response('Image not found', { status: 404 });
+    }
 
     console.log(response.ok, response.status);
 
@@ -134,24 +138,28 @@ function makeInlineResponse(response, requestUrl) {
     // 关键：创建全新的 Headers，不复制上游的任何头
     const newHeaders = new Headers();
 
-    // 从请求 URL 推断 MIME 类型
-    const pathname = requestUrl.pathname || '';
-    const ext = pathname.split('.').pop().toLowerCase();
-    const mimeTypes = {
-        'jpg': 'image/jpeg',
-        'jpeg': 'image/jpeg',
-        'png': 'image/png',
-        'gif': 'image/gif',
-        'webp': 'image/webp',
-        'svg': 'image/svg+xml',
-        'bmp': 'image/bmp',
-        'ico': 'image/x-icon',
-    };
+    // 优先使用上游（Telegram）返回的 Content-Type，因为它更准确
+    // Telegram 可能会转换图片格式（如 PNG→JPEG），URL 扩展名不一定正确
+    const upstreamContentType = response.headers.get('Content-Type');
+    if (upstreamContentType && upstreamContentType.startsWith('image/')) {
+        newHeaders.set('Content-Type', upstreamContentType);
+    } else {
+        // 回退到根据 URL 扩展名推断
+        const pathname = requestUrl.pathname || '';
+        const ext = pathname.split('.').pop().toLowerCase();
+        const mimeTypes = {
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'webp': 'image/webp',
+            'svg': 'image/svg+xml',
+            'bmp': 'image/bmp',
+            'ico': 'image/x-icon',
+        };
+        newHeaders.set('Content-Type', mimeTypes[ext] || 'image/jpeg');
+    }
 
-    const correctMime = mimeTypes[ext] || 'image/jpeg';
-
-    // 只设置必要的头
-    newHeaders.set('Content-Type', correctMime);
     newHeaders.set('Content-Disposition', 'inline');
     newHeaders.set('Cache-Control', 'public, max-age=31536000');
 
