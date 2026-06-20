@@ -31,7 +31,7 @@ export async function onRequest(context) {
     });
 
     // If the response is OK, proceed with further checks
-    if (!response.ok) return makeInlineResponse(response);
+    if (!response.ok) return makeInlineResponse(response, url);
 
     // Log response details
     console.log(response.ok, response.status);
@@ -39,13 +39,13 @@ export async function onRequest(context) {
     // Allow the admin page to directly view the image
     const isAdmin = request.headers.get('Referer')?.includes(`${url.origin}/admin`);
     if (isAdmin) {
-        return makeInlineResponse(response);
+        return makeInlineResponse(response, url);
     }
 
     // Check if KV storage is available
     if (!env.img_url) {
         console.log("KV storage not available, returning image directly");
-        return makeInlineResponse(response);  // Directly return image response, terminate execution
+        return makeInlineResponse(response, url);  // Directly return image response, terminate execution
     }
 
     // The following code executes only if KV is available
@@ -77,7 +77,7 @@ export async function onRequest(context) {
 
     // Handle based on ListType and Label
     if (metadata.ListType === "White") {
-        return makeInlineResponse(response);
+        return makeInlineResponse(response, url);
     } else if (metadata.ListType === "Block" || metadata.Label === "adult") {
         const referer = request.headers.get('Referer');
         const redirectUrl = referer ? "https://static-res.pages.dev/teleimage/img-block-compressed.png" : `${url.origin}/block-img.html`;
@@ -124,38 +124,43 @@ export async function onRequest(context) {
     await env.img_url.put(params.id, "", { metadata });
 
     // Return file content
-    return makeInlineResponse(response);
+    return makeInlineResponse(response, url);
 }
 
-// 关键修复：确保删除已有的 attachment 头，并正确设置 inline
-function makeInlineResponse(response) {
-    const newHeaders = new Headers(response.headers);
+// 修复：强制设置所有必要的头，确保浏览器预览而不是下载
+function makeInlineResponse(response, requestUrl) {
+    const newHeaders = new Headers();
 
-    // 删除可能存在的 attachment 头
-    newHeaders.delete('Content-Disposition');
-    // 设置为 inline（浏览器直接预览）
+    // 从请求 URL 推断 MIME 类型
+    const pathname = requestUrl.pathname || '';
+    const ext = pathname.split('.').pop().toLowerCase();
+    const mimeTypes = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp',
+        'svg': 'image/svg+xml',
+        'bmp': 'image/bmp',
+        'ico': 'image/x-icon',
+    };
+
+    const correctMime = mimeTypes[ext] || 'image/jpeg';
+
+    // 只设置必要的头，避免上游的 attachment 头
+    newHeaders.set('Content-Type', correctMime);
     newHeaders.set('Content-Disposition', 'inline');
+    newHeaders.set('Cache-Control', 'public, max-age=31536000');
 
-    // 确保 Content-Type 正确（从 URL 推断）
-    if (!newHeaders.has('Content-Type') || newHeaders.get('Content-Type') === 'application/octet-stream') {
-        const url = response.url || '';
-        const ext = url.split('.').pop().toLowerCase();
-        const mimeTypes = {
-            'jpg': 'image/jpeg',
-            'jpeg': 'image/jpeg',
-            'png': 'image/png',
-            'gif': 'image/gif',
-            'webp': 'image/webp',
-            'svg': 'image/svg+xml',
-            'bmp': 'image/bmp',
-            'ico': 'image/x-icon',
-        };
-        if (mimeTypes[ext]) {
-            newHeaders.set('Content-Type', mimeTypes[ext]);
-        } else {
-            newHeaders.set('Content-Type', 'image/jpeg');
-        }
+    // 如果有 content-length，保留它
+    const contentLength = response.headers.get('content-length');
+    if (contentLength) {
+        newHeaders.set('Content-Length', contentLength);
     }
+
+    console.log('Content-Type:', correctMime);
+    console.log('Content-Disposition: inline');
+    console.log('Original Content-Disposition:', response.headers.get('content-disposition'));
 
     return new Response(response.body, {
         status: response.status,
