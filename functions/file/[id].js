@@ -6,20 +6,38 @@ export async function onRequest(context) {
     } = context;
 
     const url = new URL(request.url);
-    let fileUrl = 'https://telegra.ph/' + url.pathname + url.search
-    if (url.pathname.length > 39) {
-        const formdata = new FormData();
-        formdata.append("file_id", url.pathname);
 
-        const requestOptions = {
-            method: "POST",
-            body: formdata,
-            redirect: "follow"
-        };
-        console.log(url.pathname.split(".")[0].split("/")[2])
-        const filePath = await getFilePath(env, url.pathname.split(".")[0].split("/")[2]);
-        console.log(filePath)
+    // 获取记录（支持短 ID 和长 ID）
+    let record = await env.img_url.getWithMetadata(params.id);
+
+    // 如果找不到，尝试去掉扩展名再查（兼容短 ID 格式）
+    if (!record && params.id.includes('.')) {
+        const idWithoutExt = params.id.split('.')[0];
+        record = await env.img_url.getWithMetadata(idWithoutExt);
+    }
+
+    let fileId;
+    let fileUrl;
+
+    if (record && record.metadata && record.metadata.originalId) {
+        // 短 ID：使用原始 file_id 获取图片
+        fileId = record.metadata.originalId;
+        const filePath = await getFilePath(env, fileId);
+        if (!filePath) {
+            return new Response('Not Found', { status: 404 });
+        }
         fileUrl = `https://api.telegram.org/file/bot${env.TG_Bot_Token}/${filePath}`;
+    } else if (url.pathname.length > 39) {
+        // 旧的长 ID 直接访问（兼容旧链接）
+        fileId = url.pathname.split(".")[0].split("/")[2];
+        const filePath = await getFilePath(env, fileId);
+        if (!filePath) {
+            return new Response('Not Found', { status: 404 });
+        }
+        fileUrl = `https://api.telegram.org/file/bot${env.TG_Bot_Token}/${filePath}`;
+    } else {
+        // 尝试从 telegra.ph 直接获取（兼容原始链接）
+        fileUrl = 'https://telegra.ph/' + url.pathname + url.search;
     }
 
     const response = await fetch(fileUrl, {
@@ -42,7 +60,7 @@ export async function onRequest(context) {
         return makeInlineResponse(response, url);
     }
 
-    let record = await env.img_url.getWithMetadata(params.id);
+    // 如果 record 不存在（旧链接），初始化元数据
     if (!record || !record.metadata) {
         console.log("Metadata not found, initializing...");
         record = {
