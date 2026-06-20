@@ -1,15 +1,5 @@
 import { errorHandling, telemetryData } from "./utils/middleware";
 
-// 生成短 ID（8位随机字符串，包含大小写字母和数字）
-function generateShortId() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
-
 export async function onRequestPost(context) {
     const { request, env } = context;
 
@@ -59,26 +49,8 @@ export async function onRequestPost(context) {
             throw new Error('Failed to get file ID');
         }
 
-        // 生成短 ID
-        const shortId = generateShortId();
-
-        // 将文件信息保存到 KV 存储：短ID → 原始file_id
+        // 将文件信息保存到 KV 存储
         if (env.img_url) {
-            // 存储短ID映射（用于 file/[id].js 查询）
-            await env.img_url.put(shortId, fileId, {
-                metadata: {
-                    originalId: fileId,
-                    TimeStamp: Date.now(),
-                    ListType: "None",
-                    Label: "None",
-                    liked: false,
-                    fileName: fileName,
-                    fileSize: uploadFile.size,
-                    fileExtension: fileExtension,
-                }
-            });
-
-            // 同时保留原始ID的元数据（兼容旧链接）
             await env.img_url.put(`${fileId}.${fileExtension}`, "", {
                 metadata: {
                     TimeStamp: Date.now(),
@@ -91,9 +63,8 @@ export async function onRequestPost(context) {
             });
         }
 
-        // 返回短链接
         return new Response(
-            JSON.stringify([{ 'src': `/file/${shortId}.${fileExtension}` }]),
+            JSON.stringify([{ 'src': `/file/${fileId}.${fileExtension}` }]),
             {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
