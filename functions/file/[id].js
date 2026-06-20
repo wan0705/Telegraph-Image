@@ -7,37 +7,33 @@ export async function onRequest(context) {
 
     const url = new URL(request.url);
 
-    // 获取记录（支持短 ID 和长 ID）
-    let record = await env.img_url.getWithMetadata(params.id);
-
-    // 如果找不到，尝试去掉扩展名再查（兼容短 ID 格式）
-    if (!record && params.id.includes('.')) {
-        const idWithoutExt = params.id.split('.')[0];
-        record = await env.img_url.getWithMetadata(idWithoutExt);
+    // 处理 CORS 预检请求
+    if (request.method === 'OPTIONS') {
+        return new Response(null, {
+            status: 204,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+                'Access-Control-Max-Age': '86400',
+            }
+        });
     }
 
-    let fileId;
-    let fileUrl;
+    let fileUrl = 'https://telegra.ph/' + url.pathname + url.search
+    if (url.pathname.length > 39) {
+        const formdata = new FormData();
+        formdata.append("file_id", url.pathname);
 
-    if (record && record.metadata && record.metadata.originalId) {
-        // 短 ID：使用原始 file_id 获取图片
-        fileId = record.metadata.originalId;
-        const filePath = await getFilePath(env, fileId);
-        if (!filePath) {
-            return new Response('Not Found', { status: 404 });
-        }
+        const requestOptions = {
+            method: "POST",
+            body: formdata,
+            redirect: "follow"
+        };
+        console.log(url.pathname.split(".")[0].split("/")[2])
+        const filePath = await getFilePath(env, url.pathname.split(".")[0].split("/")[2]);
+        console.log(filePath)
         fileUrl = `https://api.telegram.org/file/bot${env.TG_Bot_Token}/${filePath}`;
-    } else if (url.pathname.length > 39) {
-        // 旧的长 ID 直接访问（兼容旧链接）
-        fileId = url.pathname.split(".")[0].split("/")[2];
-        const filePath = await getFilePath(env, fileId);
-        if (!filePath) {
-            return new Response('Not Found', { status: 404 });
-        }
-        fileUrl = `https://api.telegram.org/file/bot${env.TG_Bot_Token}/${filePath}`;
-    } else {
-        // 尝试从 telegra.ph 直接获取（兼容原始链接）
-        fileUrl = 'https://telegra.ph/' + url.pathname + url.search;
     }
 
     const response = await fetch(fileUrl, {
@@ -46,25 +42,21 @@ export async function onRequest(context) {
         body: request.body,
     });
 
-    // 关键修复：如果获取失败，返回 404 而不是假装是图片
-    if (!response.ok) {
-        console.error('Failed to fetch image:', response.status, fileUrl);
-        return new Response('Image not found', { status: 404 });
-    }
+    if (!response.ok) return makeInlineResponse(response, url, request);
 
     console.log(response.ok, response.status);
 
     const isAdmin = request.headers.get('Referer')?.includes(`${url.origin}/admin`);
     if (isAdmin) {
-        return makeInlineResponse(response, url);
+        return makeInlineResponse(response, url, request);
     }
 
     if (!env.img_url) {
         console.log("KV storage not available, returning image directly");
-        return makeInlineResponse(response, url);
+        return makeInlineResponse(response, url, request);
     }
 
-    // 如果 record 不存在（旧链接），初始化元数据
+    let record = await env.img_url.getWithMetadata(params.id);
     if (!record || !record.metadata) {
         console.log("Metadata not found, initializing...");
         record = {
@@ -90,7 +82,7 @@ export async function onRequest(context) {
     };
 
     if (metadata.ListType === "White") {
-        return makeInlineResponse(response, url);
+        return makeInlineResponse(response, url, request);
     } else if (metadata.ListType === "Block" || metadata.Label === "adult") {
         const referer = request.headers.get('Referer');
         const redirectUrl = referer ? "https://static-res.pages.dev/teleimage/img-block-compressed.png" : `${url.origin}/block-img.html`;
@@ -131,37 +123,38 @@ export async function onRequest(context) {
     console.log("Saving metadata");
     await env.img_url.put(params.id, "", { metadata });
 
-    return makeInlineResponse(response, url);
+    return makeInlineResponse(response, url, request);
 }
 
-function makeInlineResponse(response, requestUrl) {
+function makeInlineResponse(response, requestUrl, request) {
     // 关键：创建全新的 Headers，不复制上游的任何头
     const newHeaders = new Headers();
 
-    // 优先使用上游（Telegram）返回的 Content-Type，因为它更准确
-    // Telegram 可能会转换图片格式（如 PNG→JPEG），URL 扩展名不一定正确
-    const upstreamContentType = response.headers.get('Content-Type');
-    if (upstreamContentType && upstreamContentType.startsWith('image/')) {
-        newHeaders.set('Content-Type', upstreamContentType);
-    } else {
-        // 回退到根据 URL 扩展名推断
-        const pathname = requestUrl.pathname || '';
-        const ext = pathname.split('.').pop().toLowerCase();
-        const mimeTypes = {
-            'jpg': 'image/jpeg',
-            'jpeg': 'image/jpeg',
-            'png': 'image/png',
-            'gif': 'image/gif',
-            'webp': 'image/webp',
-            'svg': 'image/svg+xml',
-            'bmp': 'image/bmp',
-            'ico': 'image/x-icon',
-        };
-        newHeaders.set('Content-Type', mimeTypes[ext] || 'image/jpeg');
-    }
+    // 从请求 URL 推断 MIME 类型
+    const pathname = requestUrl.pathname || '';
+    const ext = pathname.split('.').pop().toLowerCase();
+    const mimeTypes = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp',
+        'svg': 'image/svg+xml',
+        'bmp': 'image/bmp',
+        'ico': 'image/x-icon',
+    };
 
+    const correctMime = mimeTypes[ext] || 'image/jpeg';
+
+    // 只设置必要的头
+    newHeaders.set('Content-Type', correctMime);
     newHeaders.set('Content-Disposition', 'inline');
     newHeaders.set('Cache-Control', 'public, max-age=31536000');
+
+    // 添加 CORS 头，允许跨域引用
+    newHeaders.set('Access-Control-Allow-Origin', '*');
+    newHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    newHeaders.set('Access-Control-Allow-Headers', 'Content-Type');
 
     // 保留 content-length（如果有）
     const contentLength = response.headers.get('content-length');
